@@ -1,0 +1,74 @@
+<html>
+
+<head>
+	<title>kcpassword</title>
+	<style>
+		main {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			height: 100%;
+		}
+
+		textarea {
+			min-width: 400px;
+			width: 50%;
+			margin-bottom: 1em;
+		}
+	</style>
+</head>
+
+<body>
+	<main>
+		<h1>kcpassword encoder/decoder</h1>
+		<textarea id="decoded" placeholder="plaintext"></textarea>
+		<textarea id="encoded" placeholder="encoded"></textarea>
+	</main>
+
+	<script>
+		const key = [0x7D, 0x89, 0x52, 0x23, 0xD2, 0xBC, 0xDD, 0xEA, 0xA3, 0xB9, 0x1F]
+
+		function encode(password) {
+			let pad = password.length % (key.length + 1)
+			password += "\x00".repeat(key.length + 1 - pad)
+
+			let result = ''
+			for (let i = 0; i < password.length; i++) {
+				let hex = (password.charCodeAt(i) ^ key[i % key.length]).toString(16)
+				if (hex.length == 1) {
+					result += '0'
+				}
+				result += hex
+			}
+
+			return result
+		}
+
+		function decode(encoded) {
+			let result = ''
+
+			for (let i = 0, j = 0; i < encoded.length; i += 2, j++) {
+				let c = key[j % key.length] ^ parseInt(encoded.substr(i, 2), 16)
+				if (c == 0x00) {
+					break
+				}
+
+				console.log(c, String.fromCharCode(c))
+				result += String.fromCharCode(c)
+			}
+
+			return result
+		}
+
+		document.getElementById('decoded').addEventListener('input', (e) => {
+			document.getElementById('encoded').value = encode(e.target.value)
+		})
+
+		document.getElementById('encoded').addEventListener('input', (e) => {
+			document.getElementById('decoded').value = decode(e.target.value)
+		})
+	</script>
+</body>
+
+</html>
